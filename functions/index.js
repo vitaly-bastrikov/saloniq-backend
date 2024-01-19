@@ -1,47 +1,48 @@
-// /**
-//  * Import function triggers from their respective submodules:
-//  *
-//  * const {onCall} = require("firebase-functions/v2/https");
-//  * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
-//  *
-//  * See a full list of supported triggers at https://firebase.google.com/docs/functions
-//  */
-
-// const { onRequest } = require("firebase-functions/v2/https");
-// const logger = require("firebase-functions/logger");
-
-// // Create and deploy your first functions
-// //firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", { structuredData: true });
-//   response.send("Hello from Firebase!");
-// });
-
 const functions = require("firebase-functions");
-const cors = require("cors");
 const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 
-// Express app config
-const tasksApp = express();
+const app = express();
 
-tasksApp.use(cors({ origin: true }));
+// This is your test secret API key.
+app.use(cors({ origin: true }));
+const stripe = require("stripe")("sk_test_QgJztNZh70N9iTn6luuvuVxP00dGIII7Gz");
 
-// A simple api to get all tasks
-tasksApp.get("/", (request, response) => {
-  response.status(200).send([
-    {
-      id: "123",
-      name: "Task 1",
-      isComplete: false,
-    },
-    {
-      id: "456",
-      name: "Task 2",
-      isComplete: true,
-    },
-  ]);
+app.use(express.static("public"));
+app.use(express.json());
+app.use(bodyParser.json());
+
+const calculateOrderAmount = (items) => {
+  var total = 0;
+  for (var item in items) {
+    total += parseInt(item.price);
+  }
+
+  return total * 100;
+};
+
+app.post("/create-payment-intent", async (req, res) => {
+  var total = 0;
+
+  for (let item of req.body) {
+    console.log(item);
+    total += parseFloat(item.price);
+  }
+  total *= 100;
+
+  console.log("total: ", total);
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: total,
+    // amount: 60,
+    currency: "cad",
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
 });
-// tasks will be the name of the function as well as API
-//in which we will pass our express app
-exports.tasks = functions.https.onRequest(tasksApp);
+
+exports.app = functions.https.onRequest(app);
