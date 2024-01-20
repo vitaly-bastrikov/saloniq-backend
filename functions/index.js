@@ -27,9 +27,9 @@ app.post("/create-payment-intent", async (req, res) => {
 
   for (let item of req.body) {
     console.log(item);
-    total += parseFloat(item.price);
+    total += parseFloat(item.price).toFixed(2) * 100;
   }
-  total *= 100;
+  //   total *= 100;
 
   console.log("total: ", total);
 
