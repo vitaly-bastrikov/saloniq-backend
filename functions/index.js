@@ -23,13 +23,13 @@ const calculateOrderAmount = (items) => {
 };
 
 app.post("/create-payment-intent", async (req, res) => {
-  var total = 0;
+  // var total = 0;
 
-  for (let item of req.body) {
-    console.log(item);
-    total += parseFloat(item.price).toFixed(2) * 100;
-  }
-  //   total *= 100;
+  // for (let item of req.body) {
+  //   console.log("item: ", item);
+  //   total += parseFloat(item.price).toFixed(2) * 100;
+  // }
+  var total = req.body.total * 100;
 
   console.log("total: ", total);
 
